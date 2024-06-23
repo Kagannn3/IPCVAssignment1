@@ -140,5 +140,41 @@ for startingPoint in zip(*regions[::-1]):
 for detectedCornersAndCenterLoc in cornersAndCenterLocListOfDetected:
   boxes = np.array([detectedCornersAndCenterLoc[0] + detectedCornersAndCenterLoc[1]])
   similarityScores = templateMatchingScore[regions]
+  selectedBoxIndices.extend(non_max_suppression(
+      boxes=boxes, scores=similarityScores, max_output_size=45, iou_threshold=0.5
+  ).numpy())
+
+# in this above code, we are collected indices(this indices are retrieved from the indices of the boxes variable) of 45 boxes which have highest similarity scores
+# we also set the intersection over union threshold as 0.5, which means that, we will not collect if the boxes's iou_threshold is higher than 0.5
+
+lastDetectedBoundingBoxes = []
+for eachSelectedBoxIndices in selectedBoxIndices:
+  lastDetectedBoundingBoxes.append(cornersAndCenterLocListOfDetected[eachSelectedBoxIndices])
+
+# in this above code represents that the last time indicated bounding boxes after the non-max suppression
+
+counterForIndex = 0
+for eachBoundingBox in lastDetectedBoundingBoxes:
+  counterForIndex = counterForIndex + 1
+  print(f"The number of instance is: {eachBoundingBox} {{the width of box: {detectedCornersAndCenterLoc[1][0]-detectedCornersAndCenterLoc[0][0]}px, the height of box: {detectedCornersAndCenterLoc[1][1]-detectedCornersAndCenterLoc[0][1]}px, the center location is: {detectedCornersAndCenterLoc[2]}}}")
+
+# in this above code prints the number of selected detected boxes, width of this boxes, height of this boxes and center location of this boxes
+
+copiedSceneImage = sceneImagePreprocessing.copy()
+# to copy preprocessed image to draw rectangles on the copy instead of destroying the original image
+
+for eachBb in lastDetectedBoundingBoxes:
+  # to iterate over corners and center locations of the final detected bounding boxes
+  cv2.rectangle(copiedSceneImage, eachBb[0], eachBb[1], (0,255,0), 5)
+  # to draw rectangle on the copied scene image from the starting point(eachBb[0]), to the end point(eachBb[1])
+  # by green color (0,255,0), and thickness value (3)
+
+plt.figure(figsize=(40,40))
+# to create a figure with 40x40 inches
+plt.imshow(copiedSceneImage)
+# to display the expected format of the image
+plt.title("The detected products are: ")
+plt.show()
+# to render the plot
   
 
